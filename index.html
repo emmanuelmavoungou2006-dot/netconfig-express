@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetConfig Express — Assistant Configuration & Calculateur IP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: '#00f2fe',
+            darkbg: '#0f172a',
+            cardbg: '#1e293b'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
+
+  <div class="max-w-6xl mx-auto space-y-6">
+    
+    <!-- EN-TÊTE SANS NOM PROPRE -->
+   <!-- EN-TÊTE AVEC LOGO SVG SVG EMBEDDÉ -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-4 gap-4">
+      <div class="flex items-center space-x-3">
+        <!-- LOGO ICON SVG -->
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 p-0.5 shadow-lg shadow-cyan-950/50 flex items-center justify-center">
+          <div class="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center">
+            <svg class="w-6 h-6 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <!-- Noeuds Réseau -->
+              <circle cx="5" cy="6" r="2" />
+              <circle cx="19" cy="6" r="2" />
+              <circle cx="12" cy="18" r="2" />
+              <!-- Lignes de Connexion -->
+              <path d="M7 6h10" />
+              <path d="M6.5 7.5L11 16.5" />
+              <path d="M17.5 7.5L13 16.5" />
+              <!-- Éclair/Vitesse (Express) -->
+              <path d="M13 2l-4 5h4l-2 5" class="text-amber-400 stroke-amber-400" stroke-width="2.5"/>
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">NetConfig <span class="text-cyan-400">Express</span></h1>
+            <span class="bg-cyan-950 text-cyan-400 border border-cyan-800 text-[10px] font-semibold px-2 py-0.5 rounded-full font-mono">v1.2</span>
+          </div>
+          <p class="text-slate-400 text-xs mt-0.5">Calculateur Subnetting & Générateur d'Interface CLI Cisco</p>
+        </div>
+      </div>
+      
+      <!-- BADGE DE LA MARQUE -->
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-lg p-2.5 text-xs flex items-center space-x-3">
+        <div class="w-7 h-7 rounded-full bg-cyan-950 border border-cyan-500/40 flex items-center justify-center font-bold text-cyan-400 text-xs">NC</div>
+        <div>
+          <p class="font-semibold text-slate-200">NetConfig Suite</p>
+          <p class="text-slate-400 text-[11px]">Network Utility Tool</p>
+        </div>
+      </div>
+    </header>
+    </header>
+
+    <!-- ACCÈS RAPIDE / TEMPLATES TP -->
+    <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+      <span class="text-xs font-semibold text-slate-300">💡 Préconfigurations rapides pour vos TP :</span>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="loadTemplate('tp_simple')" class="text-xs bg-slate-700 hover:bg-slate-600 text-cyan-300 px-3 py-1 rounded transition">TP Routeur de Base</button>
+        <button onclick="loadTemplate('tp_vlan')" class="text-xs bg-slate-700 hover:bg-slate-600 text-cyan-300 px-3 py-1 rounded transition">Router-on-a-Stick (VLAN 10)</button>
+        <button onclick="loadTemplate('tp_switch')" class="text-xs bg-slate-700 hover:bg-slate-600 text-cyan-300 px-3 py-1 rounded transition">Switch d'Accès</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- FORMULAIRE DE CONFIGURATION -->
+      <section class="bg-slate-800/60 border border-slate-700 rounded-xl p-5 space-y-4">
+        <h2 class="text-lg font-semibold text-slate-200 border-b border-slate-700 pb-2 flex items-center justify-between">
+          <span>1. Paramètres de l'Équipement</span>
+        </h2>
+        
+        <!-- Type d'équipement & Hostname -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Type d'appareil</label>
+            <select id="deviceType" onchange="toggleDeviceFields()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-cyan-300 focus:outline-none focus:border-cyan-500">
+              <option value="router">Routeur Cisco</option>
+              <option value="switch">Switch Cisco (L2)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Hostname (Nom)</label>
+            <input type="text" id="hostname" value="Router-R1" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-cyan-300 focus:outline-none focus:border-cyan-500">
+          </div>
+        </div>
+
+        <!-- IP & CIDR -->
+        <div class="grid grid-cols-3 gap-2">
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-slate-400 mb-1">Adresse IP de l'interface / Passerelle</label>
+            <input type="text" id="ipAddress" value="192.168.10.1" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-cyan-300 focus:outline-none focus:border-cyan-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Masque (CIDR)</label>
+            <input type="number" id="cidr" value="24" min="1" max="32" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-cyan-300 focus:outline-none focus:border-cyan-500">
+          </div>
+        </div>
+
+        <!-- Interface -->
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Interface Principale</label>
+          <select id="interfaceName" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-cyan-300 focus:outline-none focus:border-cyan-500">
+            <option value="GigabitEthernet0/0/0">GigabitEthernet0/0/0</option>
+            <option value="GigabitEthernet0/0/1">GigabitEthernet0/0/1</option>
+            <option value="FastEthernet0/1">FastEthernet0/1</option>
+            <option value="FastEthernet0/24">FastEthernet0/24</option>
+          </select>
+        </div>
+
+        <!-- Options Avancées : VLAN & DHCP -->
+        <div class="border-t border-slate-700/50 pt-3 space-y-3">
+          <h3 class="text-xs font-semibold text-slate-300">Services & Extensions</h3>
+          
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">VLAN ID (Optionnel)</label>
+              <input type="number" id="vlanId" placeholder="ex: 10" value="10" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200">
+            </div>
+
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Nom du VLAN</label>
+              <input type="text" id="vlanName" placeholder="ex: ETUDIANTS" value="ETUDIANTS" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200">
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2 pt-1" id="dhcpContainer">
+            <input type="checkbox" id="enableDhcp" checked class="rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-0">
+            <label for="enableDhcp" class="text-xs text-slate-300 cursor-pointer">Activer le serveur DHCP automatique</label>
+          </div>
+        </div>
+
+        <!-- Bouton Générer -->
+        <button onclick="processNetwork()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-2.5 rounded-lg transition duration-200 shadow-lg shadow-cyan-950">
+          Générer la Configuration CLI
+        </button>
+      </section>
+
+      <!-- RÉSULTATS : IP & SCRIPT CLI -->
+      <section class="space-y-4">
+        
+        <!-- Résumé IP avec conseils -->
+        <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-5 space-y-2">
+          <h2 class="text-lg font-semibold text-slate-200 border-b border-slate-700 pb-2">2. Analyse de votre Sous-Réseau</h2>
+          <div class="grid grid-cols-2 gap-3 text-xs font-mono">
+            <div class="bg-slate-900/80 p-2 rounded border border-slate-700/50">
+              <span class="text-slate-500 block">Masque Décimal:</span>
+              <span id="resMask" class="text-cyan-400 font-bold">-</span>
+            </div>
+            <div class="bg-slate-900/80 p-2 rounded border border-slate-700/50">
+              <span class="text-slate-500 block">Adresse Réseau:</span>
+              <span id="resNet" class="text-cyan-400 font-bold">-</span>
+            </div>
+            <div class="bg-slate-900/80 p-2 rounded border border-slate-700/50">
+              <span class="text-slate-500 block">Adresse Broadcast:</span>
+              <span id="resBcast" class="text-cyan-400 font-bold">-</span>
+            </div>
+            <div class="bg-slate-900/80 p-2 rounded border border-slate-700/50">
+              <span class="text-slate-500 block">Nombre d'Hôtes Utilisables:</span>
+              <span id="resHosts" class="text-cyan-400 font-bold">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Script CLI Généré avec boutons pratiques -->
+        <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-5 space-y-2">
+          <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+            <h2 class="text-lg font-semibold text-slate-200">3. Script Cisco Commenté</h2>
+            <div class="flex space-x-2">
+              <button onclick="downloadConfig()" class="text-xs bg-slate-700 hover:bg-slate-600 px-2.5 py-1 rounded text-slate-200">
+                📥 Télécharger .txt
+              </button>
+              <button onclick="copyToClipboard()" class="text-xs bg-cyan-700 hover:bg-cyan-600 px-3 py-1 rounded text-white font-semibold">
+                📋 Copier
+              </button>
+            </div>
+          </div>
+          <textarea id="cliOutput" readonly class="w-full h-56 bg-slate-950 border border-slate-800 text-green-400 font-mono text-xs p-3 rounded focus:outline-none resize-none" placeholder="Le script CLI commenté apparaîtra ici..."></textarea>
+        </div>
+
+      </section>
+
+    </div>
+
+    <!-- PIED DE PAGE ANONYME -->
+    <footer class="border-t border-slate-800 pt-4 text-center text-xs text-slate-500 space-y-1">
+      <p>NetConfig Express — Solution gratuite pour simplifier l'administration réseau.</p>
+    </footer>
+
+  </div>
+
+  <script>
+    function cidrToSubnet(cidr) {
+      let mask = [];
+      for (let i = 0; i < 4; i++) {
+        let n = Math.min(cidr, 8);
+        mask.push(256 - Math.pow(2, 8 - n));
+        cidr -= n;
+      }
+      return mask.join('.');
+    }
+
+    function toggleDeviceFields() {
+      const type = document.getElementById('deviceType').value;
+      const hostnameInput = document.getElementById('hostname');
+      if (type === 'switch') {
+        if (hostnameInput.value === 'Router-R1') hostnameInput.value = 'Switch-SW1';
+        document.getElementById('dhcpContainer').style.display = 'none';
+      } else {
+        if (hostnameInput.value === 'Switch-SW1') hostnameInput.value = 'Router-R1';
+        document.getElementById('dhcpContainer').style.display = 'flex';
+      }
+    }
+
+    function loadTemplate(type) {
+      if (type === 'tp_simple') {
+        document.getElementById('deviceType').value = 'router';
+        document.getElementById('hostname').value = 'Router-R1';
+        document.getElementById('ipAddress').value = '192.168.1.1';
+        document.getElementById('cidr').value = '24';
+        document.getElementById('vlanId').value = '';
+        document.getElementById('enableDhcp').checked = false;
+      } else if (type === 'tp_vlan') {
+        document.getElementById('deviceType').value = 'router';
+        document.getElementById('hostname').value = 'Router-Core';
+        document.getElementById('ipAddress').value = '10.0.10.1';
+        document.getElementById('cidr').value = '24';
+        document.getElementById('vlanId').value = '10';
+        document.getElementById('vlanName').value = 'ETUDIANTS';
+        document.getElementById('enableDhcp').checked = true;
+      } else if (type === 'tp_switch') {
+        document.getElementById('deviceType').value = 'switch';
+        document.getElementById('hostname').value = 'Switch-Access';
+        document.getElementById('vlanId').value = '20';
+        document.getElementById('vlanName').value = 'ADMINISTRATION';
+      }
+      toggleDeviceFields();
+      processNetwork();
+    }
+
+    function processNetwork() {
+      const devType = document.getElementById('deviceType').value;
+      const hostname = document.getElementById('hostname').value || 'Device';
+      const ip = document.getElementById('ipAddress').value.trim();
+      const cidr = parseInt(document.getElementById('cidr').value);
+      const iface = document.getElementById('interfaceName').value;
+      const vlanId = document.getElementById('vlanId').value.trim();
+      const vlanName = document.getElementById('vlanName').value.trim() || 'VLAN_' + vlanId;
+      const enableDhcp = document.getElementById('enableDhcp').checked;
+
+      const ipParts = ip.split('.').map(Number);
+      if (ipParts.length !== 4 || ipParts.some(p => isNaN(p) || p < 0 || p > 255)) {
+        alert("Attention : L'adresse IP saisie est invalide !");
+        return;
+      }
+
+      const maskStr = cidrToSubnet(cidr);
+      const maskParts = maskStr.split('.').map(Number);
+
+      const netParts = ipParts.map((p, i) => p & maskParts[i]);
+      const bcastParts = ipParts.map((p, i) => p | (~maskParts[i] & 255));
+      const totalHosts = Math.max(0, Math.pow(2, 32 - cidr) - 2);
+
+      document.getElementById('resMask').innerText = maskStr;
+      document.getElementById('resNet').innerText = netParts.join('.');
+      document.getElementById('resBcast').innerText = bcastParts.join('.');
+      document.getElementById('resHosts').innerText = totalHosts.toLocaleString();
+
+      let cli = `! ====================================================\n`;
+      cli += `! Script genere par NetConfig Express\n`;
+      cli += `! Equipement : ${hostname} | Date : ${new Date().toLocaleDateString('fr-FR')}\n`;
+      cli += `! ====================================================\n\n`;
+
+      cli += `enable\nconfigure terminal\n\n`;
+      cli += `! --- Configuration de base ---\n`;
+      cli += `hostname ${hostname}\n`;
+      cli += `no ip domain-lookup\n\n`;
+
+      if (devType === 'router') {
+        if (vlanId) {
+          cli += `! --- Routage Inter-VLAN (Router-on-a-Stick) ---\n`;
+          cli += `interface ${iface}\n`;
+          cli += ` description Interface trunk vers le switch\n`;
+          cli += ` no shutdown\n`;
+          cli += `exit\n\n`;
+          cli += `interface ${iface}.${vlanId}\n`;
+          cli += ` description Sous-interface pour VLAN ${vlanId} (${vlanName})\n`;
+          cli += ` encapsulation dot1Q ${vlanId}\n`;
+          cli += ` ip address ${ip} ${maskStr}\n`;
+          cli += `exit\n\n`;
+        } else {
+          cli += `! --- Interface LAN physique ---\n`;
+          cli += `interface ${iface}\n`;
+          cli += ` ip address ${ip} ${maskStr}\n`;
+          cli += ` no shutdown\n`;
+          cli += `exit\n\n`;
+        }
+
+        if (enableDhcp) {
+          cli += `! --- Pool DHCP Automatique ---\n`;
+          cli += `ip dhcp excluded-address ${ip}\n`;
+          cli += `ip dhcp pool POOL_${vlanName.toUpperCase()}\n`;
+          cli += ` network ${netParts.join('.')} ${maskStr}\n`;
+          cli += ` default-router ${ip}\n`;
+          cli += ` dns-server 8.8.8.8\n`;
+          cli += `exit\n\n`;
+        }
+      } else {
+        cli += `! --- Creation et nommage du VLAN ---\n`;
+        cli += `vlan ${vlanId}\n`;
+        cli += ` name ${vlanName}\n`;
+        cli += `exit\n\n`;
+        cli += `! --- Affectation du port en mode Access ---\n`;
+        cli += `interface ${iface}\n`;
+        cli += ` switchport mode access\n`;
+        cli += ` switchport access vlan ${vlanId}\n`;
+        cli += ` no shutdown\n`;
+        cli += `exit\n\n`;
+      }
+
+      cli += `! --- Sauvegarde de la configuration ---\n`;
+      cli += `end\nwrite memory\n`;
+      document.getElementById('cliOutput').value = cli;
+    }
+
+    function copyToClipboard() {
+      const copyText = document.getElementById("cliOutput");
+      copyText.select();
+      navigator.clipboard.writeText(copyText.value);
+      alert("Script copié avec succès ! Prêt à être collé dans Packet Tracer.");
+    }
+
+    function downloadConfig() {
+      const hostname = document.getElementById('hostname').value || 'Device';
+      const text = document.getElementById('cliOutput').value;
+      const element = document.createElement('a');
+      const file = new Blob([text], {type: 'text/plain'});
+      element.href = URL.createObjectURL(file);
+      element.download = `${hostname}_config.txt`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    }
+
+    window.onload = processNetwork;
+  </script>
+</body>
+</html>
